@@ -8,18 +8,36 @@ var locations = [
     {title: 'My House', location: {lat:  -25.48736, lng: -49.278726}},
 ];
 
+var Location = function(data){
+	this.title = ko.observable(data.title);
+	this.lat = ko.observable(data.location.lat);
+	this.lng = ko.observable(data.location.lng);
+}
+
 var ViewModel = function(){
 	var self = this;
+	this.placeList = ko.observableArray([]);
+
+	locations.forEach(function(loc){
+		self.placeList.push(new Location(loc));
+	});
+
+	this.currentPlace = ko.observable(this.placeList()[0]);
+
+	this.changePlace = function(clickedPlace) {
+		self.currentPlace(clickedPlace);
+	};
 }
 
  // TODO: Complete the following function to initialize the map
 function initMap() {
 	map = new google.maps.Map(document.getElementById('map'), {
 	    center: {lat: -25.48736, lng: -49.278726},
-	    zoom: 16,
+	    zoom: 13,
 	    mapTypeControl: false
 	});
 
+	var largeInfoWindow = new google.maps.InfoWindow();
 	var defaultIcon = makeMarkerIcon('0091ff');
     var highlightedIcon = makeMarkerIcon('FFFF24');
 
@@ -59,23 +77,12 @@ function makeMarkerIcon(markerColor){
   return markerImage;
 }
 
-function toggleDrawing(drawingManager){
-  if(drawingManager.map){
-    drawingManager.setMap(null);
-    if(polygon){
-      polygon.setMap(null);
-    }
-  }else{
-    drawingManager.setMap(map);
-  }
-}
-
 function populateInfoWindow(marker, infowindow){
     if(infowindow.marker != marker){
       infowindow.setContent('');
       infowindow.marker = marker;          
       infowindow.addListener('closeclick', function(){
-        infowindow.setMarker(null);
+        infowindow.marker = null;
       });
       var streetViewService = new google.maps.StreetViewService();
       var radius = 50;
@@ -116,16 +123,6 @@ function hideListings(markers){
   }
 }
 
-function searchWithinPolygon(){
-  for(var i = 0; i < markers.length; i++){
-    if (google.maps.geometry.poly.containsLocation(markers[i].position, polygon)){
-      markers[i].setMap(map);
-    }else{
-      markers[i].setMap(null);
-    }
-  }
-}
-
 function zoomToArea(){
   var geocoder = new google.maps.Geocoder();
   var address = document.getElementById('zoom-to-area-text').value;
@@ -143,98 +140,6 @@ function zoomToArea(){
           alert("We could not find that place, try a more specific address!");
         }
     });
-  }
-}
-
-function searchWithinTime(){
-  var distanceMatrixService = new google.maps.DistanceMatrixService();
-  var address = document.getElementById('search-within-time-text').value;
-  if(address == ''){
-    alert("You must enter a valid address!");
-  }else{
-    hideListings(markers);
-    var origins = [];
-    for(var i = 0; i < markers.length; i++){
-      origins[i] = markers[i].position;
-    }
-    var destination = address;
-    var mode = document.getElementById('mode').value;
-    distanceMatrixService.getDistanceMatrix({
-      origins: origins,
-      destinations: [destination],
-      travelMode: google.maps.TravelMode[mode],
-      unitSystem: google.maps.UnitSystem.IMPERIAL,          
-    }, function(response, status){
-      if(status !== google.maps.DistanceMatrixStatus.OK){
-        alert("Error status was: " + status);
-      }else{
-        displayMarkersWithinTime(response);
-      }
-    });
-  }
-}
-
-function displayMarkersWithinTime(response){
-  var maxDuration = document.getElementById('max-duration').value;
-  var origins = response.originAddresses;
-  var destination = response.destinationAddresses;
-  var atLeastOne = false;
-  for(var i = 0; i < origins.length; i++){
-    var results = response.rows[i].elements;
-    for(var j = 0; j < results.length; j++){
-      var element = results[j];
-      if(element.status == "OK"){
-        var distanceText = element.distance.text;
-        var duration = element.duration.value / 60;
-        var durationText = element.duration.text;
-        if(duration <= maxDuration){
-          markers[i].setMap(map);
-          atLeastOne = true;
-          var infowindow = new google.maps.InfoWindow({
-            content: durationText + " away " + distanceText + "<div><input type='button' value='View Route' onclick='displayDirections(&quot;" + origins[i] + "&quot;)'></input></div>"
-          });
-          infowindow.open(map, markers[i]);
-          markers[i].infowindow = infowindow;
-          google.maps.event.addListener(markers[i], 'click', function(){
-            this.infowindow.close();
-          });
-        }
-      }
-    }
-  }
-}
-
-function displayDirections(origin){
-  hideListings(markers);
-  var directionsService = new google.maps.DirectionsService();
-  var destinationAddress = document.getElementById('search-within-time-text').value;
-  var mode = document.getElementById('mode').value;
-  directionsService.route({
-    origin: origin,
-    destination: destinationAddress,
-    travelMode: google.maps.TravelMode[mode],
-  }, function(response, status){
-    if(status === google.maps.DirectionsStatus.OK){
-      var directionsDisplay = new google.maps.DirectionsRenderer({
-        map: map,
-        directions: response,
-        draggable: true,
-        polylineOptions: {
-          strokeColor: 'green'
-        }
-      });
-    }else{
-      alert("Directions failed due to " + status);
-    }
-  });
-}
-
-function searchBoxPlaces(searchBox){
-  hideListings(placeMarkers);
-  var places = searchBox.getPlaces();
-  createMarkersForPlaces(places);
-  if(places.length == 0){
-    alert("We did not find any places within your search!");
   }
 }
 

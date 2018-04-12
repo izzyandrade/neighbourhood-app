@@ -5,16 +5,101 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="css/sidebar.css">
 	<link rel="stylesheet" type="text/css" href="css/app.css">
+	<link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
 </head>
 <body>
-	<h1>Welcome</h1>
+	<header class="cd-main-header">
+		<span class="cd-logo">My Neighbourhood</span>
+		<a href="#0" class="cd-nav-trigger"><span></span></a>
+	</header> <!-- .cd-main-header -->
+
+	<main class="cd-main-content">
+		<nav class="cd-side-nav">
+			<ul>
+				<li class="cd-label">Main</li>
+				<li class="has-children overview">
+					<a href="#0">Overview</a>
+					
+					<ul>
+						<li><a href="#0">All Data</a></li>
+						<li><a href="#0">Category 1</a></li>
+						<li><a href="#0">Category 2</a></li>
+					</ul>
+				</li>
+				<li class="has-children notifications active">
+					<a href="#0">Notifications<span class="count">3</span></a>
+					
+					<ul>
+						<li><a href="#0">All Notifications</a></li>
+						<li><a href="#0">Friends</a></li>
+						<li><a href="#0">Other</a></li>
+					</ul>
+				</li>
+
+				<li class="has-children comments">
+					<a href="#0">Comments</a>
+					
+					<ul>
+						<li><a href="#0">All Comments</a></li>
+						<li><a href="#0">Edit Comment</a></li>
+						<li><a href="#0">Delete Comment</a></li>
+					</ul>
+				</li>
+			</ul>
+
+			<ul>
+				<li class="cd-label">Secondary</li>
+				<li class="has-children bookmarks">
+					<a href="#0">Bookmarks</a>
+					
+					<ul>
+						<li><a href="#0">All Bookmarks</a></li>
+						<li><a href="#0">Edit Bookmark</a></li>
+						<li><a href="#0">Import Bookmark</a></li>
+					</ul>
+				</li>
+				<li class="has-children images">
+					<a href="#0">Images</a>
+					
+					<ul>
+						<li><a href="#0">All Images</a></li>
+						<li><a href="#0">Edit Image</a></li>
+					</ul>
+				</li>
+
+				<li class="has-children users">
+					<a href="#0">Users</a>
+					
+					<ul>
+						<li><a href="#0">All Users</a></li>
+						<li><a href="#0">Edit User</a></li>
+						<li><a href="#0">Add User</a></li>
+					</ul>
+				</li>
+			</ul>
+
+			<ul>
+				<li class="cd-label">Action</li>
+				<li class="action-btn"><a href="#0">+ Button</a></li>
+			</ul>
+		</nav>
+
+		<div class="container-fluid content-wrapper">
+			<div class="row">
+				<div id="map"></div>
+			</div>
+		</div> <!-- .content-wrapper -->
+	</main> <!-- .cd-main-content -->
+	
 
 	<!-- SCRIPT SESSION -->
-	<script type="text/javascript" src="js/bootstrap.min.js"></script>
 	<script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+	<script src="js/jquery.menu-aim.js"></script>
 	<script type="text/javascript" src="js/knockout-3.4.2.js"></script>
-	<script type="text/javascript" src="js/app.js"></script>
+	<script src="js/sidebar-main.js"></script> <!-- Resource jQuery -->
 	<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAmqlnaE8BUZ5thTmYRNqs60ky9Z5UYL9g&libraries=places,drawing,geometry&v=3&callback=initMap"></script>
+	<script type="text/javascript" src="js/app.js"></script>
 </body>
 </html>

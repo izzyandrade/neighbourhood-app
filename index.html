@@ -17,10 +17,14 @@
 
 	<main class="cd-main-content">
 		<nav class="cd-side-nav">
-			<li class="cd-label">List of Places</li>
-			<ul data-bind="foreach: placeList">
+			<h2 class="cd-label">List of Places</h2>
+			<ul data-bind="foreach: { data: getCurrentType(), as: 'types' }"">
 				<li><a href="#0" data-bind="text: title, click: $parent.changePlace"></a></li>
 			</ul>
+			<select data-bind="options: availableTypes,
+				optionsText: 'typeTitle',
+               	value: selectedType"> 	
+            </select>
 		</nav>
 
 		<div class="container-fluid content-wrapper">

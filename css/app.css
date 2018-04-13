@@ -1,5 +1,4 @@
 #map {
-	bottom:0px;
 	height: 100%;
 	width: 100%;
 	position: absolute;
@@ -9,4 +8,8 @@
 #pano {
 	width: 200px;
 	height: 200px;
+}
+
+select {
+	width: 100%;
 }

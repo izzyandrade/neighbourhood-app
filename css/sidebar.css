@@ -8,7 +8,7 @@ Primary style
 }
 
 html {
-  font-size: 62.5%;
+  font-size: 65%;
 }
 
 body {
@@ -59,10 +59,10 @@ Main Page Content
   content: 'mobile';
 }
 @media only screen and (min-width: 768px) {
-  .cd-main-content .content-wrapper {
+  /*.cd-main-content .content-wrapper {
     margin-left: 110px;
     padding-top: 55px;
-  }
+  }*/
   .cd-main-content .content-wrapper h1 {
     padding: 4em 0;
     font-size: 3.2rem;
@@ -74,7 +74,7 @@ Main Page Content
 }
 @media only screen and (min-width: 1170px) {
   .cd-main-content .content-wrapper {
-    margin-left: 200px;
+    /*margin-left: 200px;*/
   }
   .cd-main-content::before {
     content: 'desktop';
@@ -260,7 +260,7 @@ Sidebar
 .cd-side-nav .cd-label {
   text-transform: uppercase;
   font-weight: bold;
-  color: #646a6f;
+  color: white;
   font-size: 1rem;
   letter-spacing: .1em;
 }
@@ -311,7 +311,6 @@ Sidebar
   background-position: -16px 0;
 }
 .cd-side-nav .count {
-  /* notification badge */
   position: absolute;
   top: 50%;
   bottom: auto;

@@ -2,31 +2,64 @@ var map;
 var markers = [];
 var polygon = null;
 var placeMarkers = [];
+var infowindow;
+var defaultIcon;
+var highlightedIcon;
 
 var locations = [
-    {title: 'Small Square', location: {lat: -25.487524, lng: -49.277417}},
-    {title: 'My House', location: {lat:  -25.48736, lng: -49.278726}},
+    {title: 'Small Square', location: {lat: -25.487558, lng: -49.277179}, type: 'Parks'},
+    {title: 'Big Square', location: {lat: -25.489204, lng: -49.27602}, type: 'Parks'},
+    {title: 'My House', location: {lat:  -25.48736, lng: -49.278726}, type: 'Houses'},
 ];
 
 var Location = function(data){
 	this.title = ko.observable(data.title);
 	this.lat = ko.observable(data.location.lat);
 	this.lng = ko.observable(data.location.lng);
+	this.type = data.type;
+	this.marker = '';
+}
+
+var Type = function(title){
+	this.typeTitle = title;
 }
 
 var ViewModel = function(){
 	var self = this;
-	this.placeList = ko.observableArray([]);
+	self.placeList = ko.observableArray([]);
+	self.selectedType = ko.observable('');
+
+	self.availableTypes = ko.observableArray([
+		new Type('Parks'),
+		new Type('Houses'),
+		new Type('Markets'),
+	]);
+
+	self.getCurrentType = function() {
+        var newType = this.selectedType();
+
+        if (!newType)
+            return this.placeList;
+
+        return this.placeList().filter(function(f) {
+            return f.type == newType.typeTitle;
+        });
+    }
 
 	locations.forEach(function(loc){
 		self.placeList.push(new Location(loc));
 	});
 
-	this.currentPlace = ko.observable(this.placeList()[0]);
+	self.currentPlace = ko.observable(self.placeList()[0]);
 
-	this.changePlace = function(clickedPlace) {
+	self.changePlace = function(clickedPlace) {
 		self.currentPlace(clickedPlace);
+		showInfo(null, clickedPlace);
 	};
+
+	/*self.selectedType.subscribe(function(newValue) {
+	   alert("the new value is " + newValue.typeTitle); 
+	});*/
 }
 
  // TODO: Complete the following function to initialize the map
@@ -37,9 +70,9 @@ function initMap() {
 	    mapTypeControl: false
 	});
 
-	var largeInfoWindow = new google.maps.InfoWindow();
-	var defaultIcon = makeMarkerIcon('0091ff');
-    var highlightedIcon = makeMarkerIcon('FFFF24');
+	infowindow = new google.maps.InfoWindow();
+	defaultIcon = makeMarkerIcon('0091ff');
+    highlightedIcon = makeMarkerIcon('FFFF24');
 
   	for(var i = 0; i < locations.length; i++){
 	    var position = locations[i].location;
@@ -53,16 +86,37 @@ function initMap() {
 	    });
 	    markers.push(marker);
 	    marker.addListener('click', function(){
-	      populateInfoWindow(this, largeInfoWindow);
-	    });
-	    marker.addListener('mouseover', function(){
-	      this.setIcon(highlightedIcon);
-	    });
-	    marker.addListener('mouseout', function(){
-	      this.setIcon(defaultIcon);
+	      showInfo(this, null);
 	    });
 	}
+	map.addListener("click", function(){
+		setDefaultIcons();
+	   	closeInfoWindow(infowindow);
+	});
 	showListings();
+}
+
+function setDefaultIcons(){
+	for(var i = 0; i < markers.length; i++){
+		markers[i].setIcon(defaultIcon);
+	}
+}
+
+function showInfo(marker, clickedPlace){
+	if(marker == null){
+		var center = new google.maps.LatLng(clickedPlace.lat(), clickedPlace.lng());
+		for(var i = 0; i < markers.length; i++){
+			if(markers[i].title == clickedPlace.title()){
+				marker = markers[i];
+			}
+		}
+		map.panTo(center);
+	}else{
+		map.panTo(marker.position);
+	}
+	setDefaultIcons();
+	marker.setIcon(makeMarkerIcon('FFFF24'));
+	populateInfoWindow(marker, infowindow);
 }
 
 function makeMarkerIcon(markerColor){
@@ -77,12 +131,18 @@ function makeMarkerIcon(markerColor){
   return markerImage;
 }
 
+function closeInfoWindow(infowindow){
+	infowindow.close(infowindow);
+    infowindow.marker = null;
+}
+
 function populateInfoWindow(marker, infowindow){
     if(infowindow.marker != marker){
       infowindow.setContent('');
       infowindow.marker = marker;          
       infowindow.addListener('closeclick', function(){
-        infowindow.marker = null;
+      	marker.setIcon(defaultIcon);
+      	closeInfoWindow(infowindow);
       });
       var streetViewService = new google.maps.StreetViewService();
       var radius = 50;

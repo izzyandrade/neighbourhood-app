@@ -53,12 +53,22 @@ function initMap() {
 		self.getCurrentType = function() {
 	        var newType = this.selectedType();
 
-	        if (!newType)
+	        self.placeList().forEach(function(place){
+	        	if(place.type == newType.typeTitle){
+	        		place.marker.setVisible(true);
+	        	}else{
+	        		place.marker.setVisible(false);
+	        	}
+	        });
+
+	        if (!newType){
 	            return this.placeList;
+	        }
 
 	        return this.placeList().filter(function(f) {
 	            return f.type == newType.typeTitle;
 	        });
+
 	    }
 
 		locations.forEach(function(loc){

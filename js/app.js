@@ -12,57 +12,6 @@ var locations = [
     {title: 'My House', location: {lat:  -25.48736, lng: -49.278726}, type: 'Houses'},
 ];
 
-var Location = function(data){
-	this.title = ko.observable(data.title);
-	this.lat = ko.observable(data.location.lat);
-	this.lng = ko.observable(data.location.lng);
-	this.type = data.type;
-	this.marker = '';
-}
-
-var Type = function(title){
-	this.typeTitle = title;
-}
-
-var ViewModel = function(){
-	var self = this;
-	self.placeList = ko.observableArray([]);
-	self.selectedType = ko.observable('');
-
-	self.availableTypes = ko.observableArray([
-		new Type('Parks'),
-		new Type('Houses'),
-		new Type('Markets'),
-	]);
-
-	self.getCurrentType = function() {
-        var newType = this.selectedType();
-
-        if (!newType)
-            return this.placeList;
-
-        return this.placeList().filter(function(f) {
-            return f.type == newType.typeTitle;
-        });
-    }
-
-	locations.forEach(function(loc){
-		self.placeList.push(new Location(loc));
-	});
-
-	self.currentPlace = ko.observable(self.placeList()[0]);
-
-	self.changePlace = function(clickedPlace) {
-		self.currentPlace(clickedPlace);
-		showInfo(null, clickedPlace);
-	};
-
-	/*self.selectedType.subscribe(function(newValue) {
-	   alert("the new value is " + newValue.typeTitle); 
-	});*/
-}
-
- // TODO: Complete the following function to initialize the map
 function initMap() {
 	map = new google.maps.Map(document.getElementById('map'), {
 	    center: {lat: -25.48736, lng: -49.278726},
@@ -74,27 +23,79 @@ function initMap() {
 	defaultIcon = makeMarkerIcon('0091ff');
     highlightedIcon = makeMarkerIcon('FFFF24');
 
-  	for(var i = 0; i < locations.length; i++){
-	    var position = locations[i].location;
-	    var title = locations[i].title;
-	    var marker = new google.maps.Marker({
-	      position: position,
-	      title: title,
-	      icon: defaultIcon,
-	      animation: google.maps.Animation.DROP,
-	      id: i
-	    });
-	    markers.push(marker);
-	    marker.addListener('click', function(){
-	      showInfo(this, null);
-	    });
-	}
 	map.addListener("click", function(){
 		setDefaultIcons();
 	   	closeInfoWindow(infowindow);
 	});
-	showListings();
+
+	var Location = function(data){
+		this.title = ko.observable(data.title);
+		this.location = data.location;
+		this.type = data.type;
+		this.marker = '';
+	}
+
+	var Type = function(title){
+		this.typeTitle = title;
+	}
+
+	var ViewModel = function(){
+		var self = this;
+		self.placeList = ko.observableArray([]);
+		self.selectedType = ko.observable('');
+
+		self.availableTypes = ko.observableArray([
+			new Type('Parks'),
+			new Type('Houses'),
+			new Type('Markets'),
+		]);
+
+		self.getCurrentType = function() {
+	        var newType = this.selectedType();
+
+	        if (!newType)
+	            return this.placeList;
+
+	        return this.placeList().filter(function(f) {
+	            return f.type == newType.typeTitle;
+	        });
+	    }
+
+		locations.forEach(function(loc){
+			self.placeList.push(new Location(loc));
+		});
+
+		self.placeList().forEach(function(place){
+		    var position = place.location;
+		    var title = place.title();
+		    var marker = new google.maps.Marker({
+		      position: position,
+		      title: title,
+		      icon: defaultIcon,
+		      animation: google.maps.Animation.DROP,
+		    });
+		    markers.push(marker);
+		    marker.addListener('click', function(){
+		      showInfo(this, null);
+		    });
+		    place.marker = marker;
+		});
+
+		self.currentPlace = ko.observable(self.placeList()[0]);
+
+		self.changePlace = function(clickedPlace) {
+			self.currentPlace(clickedPlace);
+			showInfo(null, clickedPlace);
+		};
+
+		showListings();
+	}
+	ko.applyBindings(new ViewModel());
 }
+
+
+
+ // TODO: Complete the following function to initialize the map
 
 function setDefaultIcons(){
 	for(var i = 0; i < markers.length; i++){
@@ -104,7 +105,7 @@ function setDefaultIcons(){
 
 function showInfo(marker, clickedPlace){
 	if(marker == null){
-		var center = new google.maps.LatLng(clickedPlace.lat(), clickedPlace.lng());
+		var center = new google.maps.LatLng(clickedPlace.location);
 		for(var i = 0; i < markers.length; i++){
 			if(markers[i].title == clickedPlace.title()){
 				marker = markers[i];
@@ -286,7 +287,7 @@ function getPlacesDetails(marker, infowindow){
   });
 }
 
-ko.applyBindings(new ViewModel());
+
 
  
 

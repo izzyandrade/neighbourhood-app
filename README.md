@@ -6,7 +6,7 @@ And the Google Maps API gets me the street view of the markers.
 
 Hope you like it!
 
-##How to run it
+## How to run it
 1. Clone or download this repository into your local machine.
 2. Go to the downloaded folder and run index.html
 3. All set! You can play with my app and see how awesome it is.

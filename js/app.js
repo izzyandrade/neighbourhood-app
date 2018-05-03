@@ -9,7 +9,9 @@ var highlightedIcon;
 var locations = [
     {title: 'Small Square', location: {lat: -25.487558, lng: -49.277179}, type: 'Parks'},
     {title: 'Big Square', location: {lat: -25.489204, lng: -49.27602}, type: 'Parks'},
-    {title: 'My House', location: {lat:  -25.48736, lng: -49.278726}, type: 'Houses'},
+    {title: 'Dalpar', location: {lat:  -25.48942, lng: -49.280567}, type: 'Markets'},
+    {title: 'Shopping Palladium', location: {lat:  -25.47784, lng: -49.290765}, type: 'Shopping'},
+    {title: 'Shopping Total', location: {lat: -25.478744, lng: -49.294367}, type: 'Shopping'},
 ];
 
 function initMap() {
@@ -33,6 +35,7 @@ function initMap() {
 		this.location = data.location;
 		this.type = data.type;
 		this.marker = '';
+		this.address = '';
 	}
 
 	var Type = function(title){
@@ -45,30 +48,31 @@ function initMap() {
 		self.selectedType = ko.observable('');
 
 		self.availableTypes = ko.observableArray([
+			new Type('All'),
 			new Type('Parks'),
-			new Type('Houses'),
 			new Type('Markets'),
+			new Type('Shopping'),
 		]);
 
 		self.getCurrentType = function() {
 	        var newType = this.selectedType();
-
+	        if(infowindow.marker != null){
+	        	closeInfoWindow(infowindow);
+	        }
 	        self.placeList().forEach(function(place){
-	        	if(place.type == newType.typeTitle){
+	        	place.marker.setIcon(defaultIcon);
+	        	if(place.type == newType.typeTitle || newType.typeTitle == 'All'){
 	        		place.marker.setVisible(true);
 	        	}else{
 	        		place.marker.setVisible(false);
 	        	}
 	        });
-
-	        if (!newType){
+	        if (newType.typeTitle == 'All' || !newType){
 	            return this.placeList;
 	        }
-
 	        return this.placeList().filter(function(f) {
 	            return f.type == newType.typeTitle;
 	        });
-
 	    }
 
 		locations.forEach(function(loc){
@@ -87,9 +91,30 @@ function initMap() {
 		    markers.push(marker);
 		    marker.addListener('click', function(){
 		      showInfo(this, null);
+		      self.currentPlace(place);
 		    });
 		    place.marker = marker;
 		});
+
+	    self.placeList().forEach(function(place) {
+	        // Set initail variables to build the correct URL for each space
+	        // AJAX call to Foursquare
+	        client_id = "HVJ5D5EH2TEFUVCSGSHZN11LZM4OHYT0S5RBLCG10ADAHR43";
+			client_secret = "XH4MUXCD2JBYWO0EJFTV5Y434PEX55JZ03ETXVUMYBYW5SYH";
+			content_fs = '';
+			ll = place.location.lat+","+ place.location.lng;
+			var baseurl = 'https://api.foursquare.com/v2/venues/search/?client_id='+client_id+"&client_secret="+client_secret+"&ll="+ll+"&v=20181604";
+			$.ajax({
+				type: "GET",
+				dataType: "json",
+				cache: false,
+				url: baseurl,
+				success: function(data) {
+					place.address = data.response.venues[0].location.address;
+				}
+			});
+	    });
+
 
 		self.currentPlace = ko.observable(self.placeList()[0]);
 
@@ -115,7 +140,7 @@ function setDefaultIcons(){
 
 function showInfo(marker, clickedPlace){
 	if(marker == null){
-		var center = new google.maps.LatLng(clickedPlace.location);
+		var center =  new google.maps.LatLng(clickedPlace.location);
 		for(var i = 0; i < markers.length; i++){
 			if(markers[i].title == clickedPlace.title()){
 				marker = markers[i];
@@ -147,6 +172,9 @@ function closeInfoWindow(infowindow){
     infowindow.marker = null;
 }
 
+function foursquareData(position, place){
+}
+
 function populateInfoWindow(marker, infowindow){
     if(infowindow.marker != marker){
       infowindow.setContent('');
@@ -157,11 +185,13 @@ function populateInfoWindow(marker, infowindow){
       });
       var streetViewService = new google.maps.StreetViewService();
       var radius = 50;
+      var content = '';
       function getStreetView(data, status){
         if(status == google.maps.StreetViewStatus.OK){
           var nearStreetViewLocation = data.location.latLng;
           var heading = google.maps.geometry.spherical.computeHeading(nearStreetViewLocation, marker.position);
-          infowindow.setContent("<div>" + marker.title + "</div><div id='pano'></div>");
+          content += "<div>" + marker.title + "</div><div id='pano'></div>";
+          infowindow.setContent(content);
           var panoramaOptions = {
             position: nearStreetViewLocation,
             pov: {
@@ -171,7 +201,8 @@ function populateInfoWindow(marker, infowindow){
           };
           var panorama = new google.maps.StreetViewPanorama(document.getElementById('pano'), panoramaOptions);
         }else{
-          infowindow.setContent("<div>"+ marker.title + "</div><div>No Street View Found</div>");
+        	content += "<div>"+ marker.title + "</div><div>No Street View Found</div>";
+          	infowindow.setContent(content);
         }
       }
       streetViewService.getPanoramaByLocation(marker.position, radius, getStreetView);
@@ -212,89 +243,6 @@ function zoomToArea(){
         }
     });
   }
-}
-
-function textSearchPlaces(){
-  var bounds = map.getBounds();
-  hideListings(placeMarkers);
-  var placesService = new google.maps.places.PlacesService(map);
-  placesService.textSearch({
-    query: document.getElementById('places-search').value,
-    bounds: bounds,
-  }, function(results, status){
-    if(status == google.maps.places.PlacesServiceStatus.OK){
-      createMarkersForPlaces(results);
-    }
-  });
-}
-
-function createMarkersForPlaces(places){
-  var bounds = new google.maps.LatLngBounds();
-  for(var i = 0; i < places.length; i++){
-    var place = places[i];
-    var icon = {
-      url: place.icon,
-      size: new google.maps.Size(35, 35),
-      origin: new google.maps.Point(0, 0),
-      anchor: new google.maps.Point(15, 34),
-      scaledSize: new google.maps.Size(25, 25)
-    };
-    var marker = new google.maps.Marker({
-      map: map,
-      icon: icon,
-      title: place.name,
-      position: place.geometry.location,
-      id: place.place_id
-    });
-
-    var placeInfoWindow = new google.maps.InfoWindow();
-      // If a marker is clicked, do a place details search on it in the next function.
-      marker.addListener('click', function() {
-        if (placeInfoWindow.marker == this) {
-          console.log("This infowindow already is on this marker!");
-        } else {
-          getPlacesDetails(this, placeInfoWindow);
-        }
-      });
-      placeMarkers.push(marker);
-      if (place.geometry.viewport) {
-        // Only geocodes have viewport.
-        bounds.union(place.geometry.viewport);
-      } else {
-        bounds.extend(place.geometry.location);
-      }
-    }
-    map.fitBounds(bounds);
-}
-
-function getPlacesDetails(marker, infowindow){
-  var service = new google.maps.places.PlacesService(map);
-  service.getDetails({
-    placeId: marker.id,
-  }, function(place, status){
-    if(status === google.maps.places.PlacesServiceStatus.OK){
-      infowindow.marker = marker;
-      var innerHTML = '<div>';
-      if(place.name){
-        innerHTML += '<strong>' + place.name + '</strong>';
-      }
-      if(place.formatted_address){
-        innerHTML += '<br>' + place.formatted_address;
-      }
-      if(place.formatted_phone_number){
-        innerHTML += '<br>' + place.formatted_phone_number;
-      }
-      if(place.photos){
-        innerHTML += '<br><br><img src="' + place.photos[0].getUrl({maxHeight: 100, maxWidth: 200}) + '">';
-      }
-      innerHTML += '</div>';
-      infowindow.setContent(innerHTML);
-      infowindow.open(map, marker);
-      infowindow.addListener('closeclick', function(){
-        infowindow.marker = null;
-      });
-    }
-  });
 }
 
 

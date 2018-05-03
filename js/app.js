@@ -6,6 +6,7 @@ var infowindow;
 var defaultIcon;
 var highlightedIcon;
 
+//hardcoded locations that will be displayed on the map
 var locations = [
     {title: 'Small Square', location: {lat: -25.487558, lng: -49.277179}, type: 'Parks'},
     {title: 'Big Square', location: {lat: -25.489204, lng: -49.27602}, type: 'Parks'},
@@ -14,6 +15,7 @@ var locations = [
     {title: 'Shopping Total', location: {lat: -25.478744, lng: -49.294367}, type: 'Shopping'},
 ];
 
+//this is the function that initializes the map, the locations, and the markers for it.
 function initMap() {
 	map = new google.maps.Map(document.getElementById('map'), {
 	    center: {lat: -25.48736, lng: -49.278726},
@@ -54,6 +56,9 @@ function initMap() {
 			new Type('Shopping'),
 		]);
 
+		//this is what I used to filter the locaitons, each location has a type
+		//and when a location is clicked, it sends the type to knockout, then KO recognizes what type is it
+		//and filter the places to show only the ones with the same type.
 		self.getCurrentType = function() {
 	        var newType = this.selectedType();
 	        if(infowindow.marker != null){
@@ -79,6 +84,7 @@ function initMap() {
 			self.placeList.push(new Location(loc));
 		});
 
+		//go through all the locations and display markers for them.
 		self.placeList().forEach(function(place){
 		    var position = place.location;
 		    var title = place.title();
@@ -96,6 +102,7 @@ function initMap() {
 		    place.marker = marker;
 		});
 
+		//this functions returns the address of the places from the foursquare API.
 	    self.placeList().forEach(function(place) {
 	        // Set initail variables to build the correct URL for each space
 	        // AJAX call to Foursquare
@@ -172,9 +179,7 @@ function closeInfoWindow(infowindow){
     infowindow.marker = null;
 }
 
-function foursquareData(position, place){
-}
-
+//this function populates the markers infowindows. 
 function populateInfoWindow(marker, infowindow){
     if(infowindow.marker != marker){
       infowindow.setContent('');
@@ -222,26 +227,6 @@ function showListings(){
 function hideListings(markers){
   for(var i = 0; i < markers.length; i++){
     markers[i].setMap(null);
-  }
-}
-
-function zoomToArea(){
-  var geocoder = new google.maps.Geocoder();
-  var address = document.getElementById('zoom-to-area-text').value;
-  if(address == ''){
-    alert("You must enter an area or an address!");
-  }else {
-    geocoder.geocode({
-      address: address,
-      componentRestrictions: {locality: 'New York'}
-    }, function(results, status){
-        if(status == google.maps.GeocoderStatus.OK){
-          map.setCenter(results[0].geometry.location);
-          map.setZoom(15);
-        }else {
-          alert("We could not find that place, try a more specific address!");
-        }
-    });
   }
 }
 

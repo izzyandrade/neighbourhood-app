@@ -119,6 +119,8 @@ function initMap() {
 				success: function(data) {
 					place.address = data.response.venues[0].location.address;
 				}
+			}).fail(function(XMLHttpRequest, textStatus, errorThrown){
+				alert("Request failed! Error: " + errorThrown);
 			});
 	    });
 
@@ -230,6 +232,9 @@ function hideListings(markers){
   }
 }
 
+function googleError(){
+	alert("Google maps API failed to load!");
+}
 
 
  
